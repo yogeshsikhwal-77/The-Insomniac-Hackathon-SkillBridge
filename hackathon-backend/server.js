@@ -47,8 +47,8 @@ pool.connect((err) => {
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'projectnotification47@gmail.com',
-    pass: 'dghdbpunexkpkxir' // ⚠️ PLEASE DELETE THIS FROM GOOGLE AND GENERATE A NEW ONE AFTER YOUR HACKATHON
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS // ⚠️ PLEASE DELETE THIS FROM GOOGLE AND GENERATE A NEW ONE AFTER YOUR HACKATHON
   }
 });
 
@@ -129,12 +129,14 @@ app.get('/api/messages/:user1/:user2', async (req, res) => {
 
 // --- SIGN UP ROUTE ---
 app.post('/api/signup', async (req, res) => {
-  const { fullName, email, password, mobileNo, year, branch, skills } = req.body;
+  // ADDED 'club' TO DESTRUCTURED BODY
+  const { fullName, email, password, mobileNo, year, branch, skills, club } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
+    // ADDED 'club' TO INSERT QUERY AND VALUES ARRAY
     const result = await pool.query(
-      'INSERT INTO users (full_name, email, password_hash, mobile_no, year, branch, skills) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, full_name, email',
-      [fullName, email, hashedPassword, mobileNo, year, branch, skills]
+      'INSERT INTO users (full_name, email, password_hash, mobile_no, year, branch, skills, club) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, full_name, email',
+      [fullName, email, hashedPassword, mobileNo, year, branch, skills, club]
     );
     res.status(201).json({ message: "User registered successfully!", user: result.rows[0] });
   } catch (err) {
@@ -185,8 +187,9 @@ app.post('/api/signin', async (req, res) => {
 // --- FETCH MENTORS ROUTE ---
 app.get('/api/mentors', async (req, res) => {
   try {
+    // ADDED 'club' TO THE SELECT STATEMENT
     const mentors = await pool.query(
-      "SELECT id, full_name, email, mobile_no, role, year, skills FROM users WHERE year IN ('2nd Year', '3rd Year', '4th Year') OR role = 'senior'"
+      "SELECT id, full_name, email, mobile_no, role, year, skills, club FROM users WHERE year IN ('2nd Year', '3rd Year', '4th Year') OR role = 'senior'"
     );
     res.json(mentors.rows);
   } catch (err) {
@@ -199,7 +202,8 @@ app.get('/api/mentors', async (req, res) => {
 app.get('/api/users/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const user = await pool.query('SELECT full_name, email, year, branch, skills, about_me FROM users WHERE id = $1', [id]);
+    // ADDED 'club' TO THE SELECT STATEMENT
+    const user = await pool.query('SELECT full_name, email, year, branch, skills, about_me, club FROM users WHERE id = $1', [id]);
     if (user.rows.length === 0) return res.status(404).json({ error: "User not found" });
     res.json(user.rows[0]);
   } catch (err) {
@@ -211,11 +215,13 @@ app.get('/api/users/:id', async (req, res) => {
 // --- UPDATE USER PROFILE ---
 app.put('/api/users/:id', async (req, res) => {
   const { id } = req.params;
-  const { year, branch, skills, aboutMe } = req.body; 
+  // ADDED 'club' TO DESTRUCTURED BODY
+  const { year, branch, skills, aboutMe, club } = req.body; 
   try {
+    // ADDED 'club = $5' TO UPDATE STATEMENT AND 'club' TO VALUES ARRAY
     await pool.query(
-      'UPDATE users SET year = $1, branch = $2, skills = $3, about_me = $4 WHERE id = $5',
-      [year, branch, skills, aboutMe, id]
+      'UPDATE users SET year = $1, branch = $2, skills = $3, about_me = $4, club = $5 WHERE id = $6',
+      [year, branch, skills, aboutMe, club, id]
     );
     res.json({ message: "Profile updated successfully!" });
   } catch (err) {
@@ -253,7 +259,7 @@ app.post('/api/request-connection', async (req, res) => {
 
     // 3. Send Email
     const mailOptions = {
-      from: 'projectnotification47@gmail.com',
+      from: process.env.EMAIL_USER,
       to: sData.email,
       subject: `New Mentorship Request from ${jData.full_name}`,
       html: `
