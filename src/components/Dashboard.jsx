@@ -15,7 +15,7 @@ const Dashboard = () => {
   const [selectedMentor, setSelectedMentor] = useState(null);
   const [reason, setReason] = useState('');
   const [isSending, setIsSending] = useState(false);
-  
+
   // Chat State
   const [myChats, setMyChats] = useState([]);
 
@@ -30,7 +30,7 @@ const Dashboard = () => {
         console.error("Failed to fetch chats", err);
       }
     };
-  
+
     if (userId) {
       fetchMyChats();
     }
@@ -47,7 +47,7 @@ const Dashboard = () => {
       try {
         const response = await fetch('http://localhost:5000/api/mentors');
         const data = await response.json();
-        
+
         if (response.ok) {
           setMentors(data);
         } else {
@@ -62,7 +62,7 @@ const Dashboard = () => {
       try {
         const response = await fetch(`http://localhost:5000/api/connections/${userId}`);
         const data = await response.json();
-        
+
         if (response.ok) {
           const statusMap = {};
           data.forEach(conn => {
@@ -123,8 +123,10 @@ const Dashboard = () => {
     if (!searchQuery) return true;
     const safeSkills = mentor.skills || '';
     const safeName = mentor.full_name || '';
+    const safeClubs = mentor.club || '';
     return safeSkills.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           safeName.toLowerCase().includes(searchQuery.toLowerCase());
+      safeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      safeClubs.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
   return (
@@ -165,7 +167,7 @@ const Dashboard = () => {
         {/* --- MY ACTIVE CHATS SECTION --- */}
         <div className="mb-16">
           <h2 className="text-2xl font-bold mb-6 text-blue-900 border-b border-gray-200 pb-2">My Active Chats</h2>
-          
+
           {myChats.length === 0 ? (
             <p className="text-gray-500 italic bg-white p-5 rounded-xl border border-dashed border-gray-300">
               No active chats yet. Connect with someone below to start chatting!
@@ -176,17 +178,16 @@ const Dashboard = () => {
                 <div key={chat.connection_id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="text-lg font-bold text-gray-800">{chat.target_name}</h3>
-                    <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
-                      chat.connection_type === 'Senior / Mentor' 
-                        ? 'bg-purple-100 text-purple-700' 
-                        : 'bg-green-100 text-green-700'
-                    }`}>
+                    <span className={`text-xs px-2 py-1 rounded-full font-semibold ${chat.connection_type === 'Senior / Mentor'
+                      ? 'bg-purple-100 text-purple-700'
+                      : 'bg-green-100 text-green-700'
+                      }`}>
                       {chat.connection_type}
                     </span>
                   </div>
                   <p className="text-sm text-gray-600 mb-4 truncate">{chat.target_email}</p>
-                  
-                  <button 
+
+                  <button
                     onClick={() => navigate(`/chat/${chat.target_user_id}`)}
                     className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold flex justify-center items-center gap-2 hover:bg-blue-700 transition"
                   >
@@ -243,13 +244,13 @@ const Dashboard = () => {
                   <div key={mentor.id} className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col group overflow-hidden">
                     {/* Card Header Background */}
                     <div className="h-20 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100"></div>
-                    
+
                     <div className="px-6 pb-6 flex-grow flex flex-col -mt-10">
                       {/* Avatar */}
                       <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-3xl border-4 border-white shadow-md mb-4 group-hover:scale-105 transition-transform">
                         {mentor.full_name.charAt(0).toUpperCase()}
                       </div>
-                      
+
                       <div className="mb-4">
                         <h3 className="text-xl font-bold text-gray-900">{mentor.full_name}</h3>
                         <div className="flex items-center text-sm text-blue-600 font-medium mt-1">
@@ -259,7 +260,27 @@ const Dashboard = () => {
                           {mentor.year ? mentor.year : (mentor.role === 'senior' ? 'Senior Developer' : mentor.role)}
                         </div>
                       </div>
-                      
+
+
+
+                      {/* Check if mentor has clubs, split them by comma, and map into badges */}
+                      {mentor.club && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {mentor.club.split(',').map((clubName, index) => (
+                            <span key={index} className="text-xs font-bold px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full border border-indigo-200">
+                              {clubName.toUpperCase()}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Example placement inside your mentor card map */}
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="text-xs font-bold px-2 py-1 bg-indigo-100 text-indigo-700 rounded-md">
+                          Club: {mentor.club ? mentor.club.toUpperCase() : 'None'}
+                        </span>
+                      </div>
+
                       {/* Skills */}
                       <div className="mb-6 flex-grow">
                         <h4 className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-3">Top Skills</h4>
@@ -286,9 +307,9 @@ const Dashboard = () => {
                             </p>
                             <p className="text-xs text-gray-700 mb-1"><strong>Email:</strong> {mentor.email}</p>
                             <p className="text-xs text-gray-700"><strong>Mobile:</strong> {mentor.mobile_no || 'Not provided'}</p>
-                            <button 
-                               onClick={() => navigate(`/chat/${mentor.id}`)}
-                               className="mt-3 w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition"
+                            <button
+                              onClick={() => navigate(`/chat/${mentor.id}`)}
+                              className="mt-3 w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition"
                             >
                               Open Chat
                             </button>
@@ -302,7 +323,7 @@ const Dashboard = () => {
                             <span>Requested</span>
                           </button>
                         ) : (
-                          <button 
+                          <button
                             onClick={() => setSelectedMentor(mentor)}
                             className="w-full flex items-center justify-center gap-2 bg-white text-blue-600 border-2 border-blue-600 py-2.5 rounded-xl font-semibold hover:bg-blue-600 hover:text-white transition-all duration-200"
                           >
@@ -347,7 +368,7 @@ const Dashboard = () => {
                 </svg>
               </button>
             </div>
-            
+
             <form onSubmit={handleSendRequest} className="p-6">
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Why do you want to connect?
@@ -360,17 +381,17 @@ const Dashboard = () => {
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
               />
-              
+
               <div className="flex gap-3 justify-end">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setSelectedMentor(null)}
                   className="px-6 py-2.5 text-gray-600 hover:bg-gray-100 rounded-xl font-medium transition"
                 >
                   Cancel
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={isSending}
                   className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition shadow-md shadow-blue-500/30 disabled:opacity-50 flex items-center gap-2"
                 >

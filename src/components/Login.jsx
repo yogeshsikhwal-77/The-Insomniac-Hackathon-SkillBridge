@@ -12,11 +12,25 @@ const Login = () => {
   const [year, setYear] = useState('');
   const [branch, setBranch] = useState('');
   const [skills, setSkills] = useState('');
+  
+  // FIXED: Changed "club, setClub" to "clubs, setClubs"
+  const [clubs, setClubs] = useState([]);     
+
+  const handleClubToggle = (clubName) => {
+    setClubs((prev) => 
+      prev.includes(clubName) 
+        ? prev.filter(c => c !== clubName) 
+        : [...prev, clubName]              
+    );
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const endpoint = isLogin ? 'signin' : 'signup';
-    const payload = isLogin ? { email, password } : { fullName, email, password, mobileNo, year, branch, skills };
+    // FIXED: Now uses the correct "clubs" variable
+    const payload = isLogin 
+      ? { email, password } 
+      : { fullName, email, password, mobileNo, year, branch, skills, club: clubs.join(',') };
 
     try {
       const response = await fetch(`http://localhost:5000/api/${endpoint}`, {
@@ -29,16 +43,14 @@ const Login = () => {
 
       if (response.ok) {
         if (!isLogin) {
-          // 🎉 SUCCESSFUL SIGNUP: Switch straight to Login view
           alert('Account created successfully! Please sign in.');
           setIsLogin(true); 
-          setPassword(''); // Clear password field for security
+          setPassword(''); 
         } else {
-          // 🎉 SUCCESSFUL SIGNIN: Save name and go to Dashboard
           if (data.user?.full_name) {
              localStorage.setItem('userName', data.user.full_name);
              localStorage.setItem('userId', data.user.id);
-             localStorage.setItem('userYear',data.user.year);
+             localStorage.setItem('userYear', data.user.year);
           }
           navigate('/dashboard');
         }
@@ -101,7 +113,6 @@ const Login = () => {
           />
         </div>
 
-        {/* 👇 New Inputs are now wrapped inside this condition 👇 */}
         {!isLogin && (
           <>
             <div>
@@ -119,6 +130,30 @@ const Login = () => {
                 <option value="4th Year">4th Year</option>
               </select>
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Clubs</label>
+              <div className="flex gap-4">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                    checked={clubs.includes('devlup')}
+                    onChange={() => handleClubToggle('devlup')}
+                  />
+                  <span className="text-gray-700">Devlup</span>
+                </label>
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                    checked={clubs.includes('posoc')}
+                    onChange={() => handleClubToggle('posoc')}
+                  />
+                  <span className="text-gray-700">POSOC</span>
+                </label>
+              </div>
+            </div>
         
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Branch</label>
@@ -131,7 +166,6 @@ const Login = () => {
             </div>
           </>
         )}
-        {/* 👆 End of conditionally rendered fields 👆 */}
         
         {isLogin && (
           <div className="flex justify-end">
@@ -157,6 +191,7 @@ const Login = () => {
         <p className="text-gray-600 text-sm">
           {isLogin ? "Don't have an account?" : "Already have an account?"}
           <button
+            type="button" // FIXED: Added type="button" here to prevent accidental form submits
             onClick={() => setIsLogin(!isLogin)}
             className="ml-1 font-bold text-blue-600 hover:underline"
           >

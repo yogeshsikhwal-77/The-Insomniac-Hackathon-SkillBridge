@@ -9,10 +9,20 @@ const Profile = () => {
     year: '',
     branch: '',
     skills: '',
-    aboutMe: ''
+    aboutMe: '',
+    clubs: []
   });
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState('');
+
+  const handleClubToggle = (clubName) => {
+    setFormData((prev) => ({
+      ...prev,
+      clubs: prev.clubs.includes(clubName)
+        ? prev.clubs.filter(c => c !== clubName)
+        : [...prev.clubs, clubName]
+    }));
+  };
 
   // Fetch existing user data on load
   useEffect(() => {
@@ -33,7 +43,8 @@ const Profile = () => {
             year: data.year || '',
             branch: data.branch || '',
             skills: data.skills || '',
-            aboutMe: data.about_me || ''
+            aboutMe: data.about_me || '',
+            clubs: data.club ? data.club.split(',') : []
           });
         }
       } catch (error) {
@@ -54,6 +65,17 @@ const Profile = () => {
     e.preventDefault();
     setMessage('');
     
+    const submitData = {
+      ...formData,
+      club: formData.clubs.join(',') // Convert back to string for database
+    };
+    
+    // Use `submitData` in the fetch instead of `formData`
+    const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(submitData), 
+    });
     try {
       const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
         method: 'PUT',
@@ -111,6 +133,30 @@ const Profile = () => {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Skills (comma separated)</label>
             <input type="text" name="skills" value={formData.skills} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="e.g. React, Python, UI/UX" required />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Clubs</label>
+            <div className="flex gap-4">
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={formData.clubs.includes('devlup')}
+                  onChange={() => handleClubToggle('devlup')}
+                  className="w-4 h-4 text-blue-600"
+                />
+                <span>Devllup</span>
+              </label>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={formData.clubs.includes('posoc')}
+                  onChange={() => handleClubToggle('posoc')}
+                  className="w-4 h-4 text-blue-600"
+                />
+                <span>POSOC</span>
+              </label>
+            </div>
           </div>
 
           <div>
