@@ -29,7 +29,7 @@ const corsOptions = {
 };
 
 // Middleware
-app.use(cors(corsOptions));
+app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 // 3. Create HTTP server to wrap Express app
@@ -38,7 +38,7 @@ const server = http.createServer(app);
 // 4. Initialize Socket.io
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: "*",
     methods: ["GET", "POST"]
   }
 });
