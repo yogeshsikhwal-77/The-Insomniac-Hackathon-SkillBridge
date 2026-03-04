@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+// 1. Define base URL for dynamic environment support
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const Login = () => {
   const navigate = useNavigate();
   
@@ -33,7 +36,8 @@ const Login = () => {
       : { fullName, email, password, mobileNo, year, branch, skills, club: clubs.join(',') };
 
     try {
-      const response = await fetch(`http://localhost:5000/api/${endpoint}`, {
+      // 2. Use the dynamic API_BASE_URL here
+      const response = await fetch(`${API_BASE_URL}/api/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

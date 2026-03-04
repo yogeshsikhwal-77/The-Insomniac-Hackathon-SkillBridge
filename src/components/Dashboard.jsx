@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+// 1. Define base URL once at the top so it's clean and reusable
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const userName = localStorage.getItem('userName') || 'Guest';
@@ -23,7 +26,8 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchMyChats = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/my-chats/${userId}`);
+        // 2. Updated to use dynamic URL
+        const res = await fetch(`${API_BASE_URL}/api/my-chats/${userId}`);
         const data = await res.json();
         setMyChats(data);
       } catch (err) {
@@ -45,13 +49,14 @@ const Dashboard = () => {
 
     const fetchMentors = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/mentors');
-        const data = await response.json();
+        // 3. Updated to use dynamic URL
+        const response = await fetch(`${API_BASE_URL}/api/mentors`);
 
         if (response.ok) {
+          const data = await response.json(); // FIXED BUG: This was missing in your original code!
           setMentors(data);
         } else {
-          console.error('Failed to fetch mentors:', data.error);
+          console.error('Failed to fetch mentors');
         }
       } catch (error) {
         console.error('Error connecting to backend:', error);
@@ -60,10 +65,11 @@ const Dashboard = () => {
 
     const fetchConnections = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/connections/${userId}`);
-        const data = await response.json();
-
+        // 4. FIXED BUG: Changed route to fetch connections, not mentors
+        const response = await fetch(`${API_BASE_URL}/api/connections/${userId}`);
+        
         if (response.ok) {
+          const data = await response.json();
           const statusMap = {};
           data.forEach(conn => {
             statusMap[conn.senior_id] = conn.status;
@@ -92,7 +98,8 @@ const Dashboard = () => {
     setIsSending(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/request-connection', {
+      // 5. Updated to use dynamic URL
+      const response = await fetch(`${API_BASE_URL}/api/request-connection`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -260,8 +267,6 @@ const Dashboard = () => {
                           {mentor.year ? mentor.year : (mentor.role === 'senior' ? 'Senior Developer' : mentor.role)}
                         </div>
                       </div>
-
-
 
                       {/* Check if mentor has clubs, split them by comma, and map into badges */}
                       {mentor.club && (

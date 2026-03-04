@@ -2,8 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 
-// Connect to WebSocket server
-const socket = io.connect("http://localhost:5000");
+// 1. Define base URL for both REST and WebSockets
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+// 2. Connect to WebSocket server using the dynamic URL
+const socket = io.connect(API_BASE_URL);
 
 const Chat = () => {
   const { targetUserId } = useParams(); // Must match the route in App.jsx
@@ -24,10 +27,10 @@ const Chat = () => {
     // Join the WebSocket room
     socket.emit("join_room", room);
 
-    // 3. Fetch History safely
+    // 3. Fetch History safely using dynamic URL
     const fetchHistory = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/messages/${userId}/${targetUserId}`);
+        const res = await fetch(`${API_BASE_URL}/api/messages/${userId}/${targetUserId}`);
         const data = await res.json();
         
         // Prevent crash: Ensure data is an array before setting it
@@ -79,7 +82,13 @@ const Chat = () => {
 
   // If IDs are missing, show an error instead of a blank page
   if (!userId || !targetUserId) {
-    return <div className="p-10 text-center text-red-500 font-bold">Error: Missing User Data</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+         <div className="p-10 text-center text-red-500 font-bold bg-white rounded-xl shadow-sm border border-red-100">
+           Error: Missing User Data. Please log in again.
+         </div>
+      </div>
+    );
   }
 
   return (
@@ -153,4 +162,5 @@ const Chat = () => {
     </div>
   );
 }
+
 export default Chat;

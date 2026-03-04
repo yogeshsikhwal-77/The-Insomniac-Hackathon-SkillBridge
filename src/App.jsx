@@ -19,8 +19,10 @@ function App() {
           <Route path="/" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/profile" element={<Profile />} /> 
-          <Route path="*" element={<Navigate to="/" />} />
           <Route path="/chat/:targetUserId" element={<Chat />} />
+          
+          { /* Catch-all route should always be last */ }
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
     </Router>

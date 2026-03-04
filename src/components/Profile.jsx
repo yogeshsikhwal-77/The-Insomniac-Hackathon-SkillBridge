@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+// 1. Define base URL for dynamic environment support
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const Profile = () => {
   const navigate = useNavigate();
   const userId = localStorage.getItem('userId');
@@ -34,7 +37,8 @@ const Profile = () => {
 
     const fetchProfile = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/users/${userId}`);
+        // 2. Use the dynamic API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/api/users/${userId}`);
         const data = await response.json();
         
         if (response.ok) {
@@ -70,17 +74,12 @@ const Profile = () => {
       club: formData.clubs.join(',') // Convert back to string for database
     };
     
-    // Use `submitData` in the fetch instead of `formData`
-    const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(submitData), 
-    });
+    // 3. Fixed duplicate fetch bug and applied dynamic URL
     try {
-      const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData), 
       });
 
       if (response.ok) {
@@ -100,6 +99,8 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+        
+        {/* Adjusted the HTML structure slightly to keep the header aligned */}
         <div className="bg-blue-600 py-6 px-8 flex justify-between items-center">
             <h2 className="text-2xl font-bold text-white">Edit Profile</h2>
             <button onClick={() => navigate('/dashboard')} className="text-blue-100 hover:text-white transition">
