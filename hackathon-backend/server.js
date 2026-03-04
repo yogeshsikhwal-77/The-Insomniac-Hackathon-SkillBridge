@@ -11,7 +11,25 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+// Set up dynamic CORS allowing local dev and Vercel production
+const allowedOrigins = [
+  "http://localhost:5173", // Local Vite
+  process.env.FRONTEND_URL // Vercel URL
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE"]
+};
+
+// Middleware
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // 3. Create HTTP server to wrap Express app
@@ -20,18 +38,17 @@ const server = http.createServer(app);
 // 4. Initialize Socket.io
 const io = new Server(server, {
   cors: {
-    origin: "*", // Update this to your React app's URL if different
+    origin: allowedOrigins,
     methods: ["GET", "POST"]
   }
 });
 
-// PostgreSQL Connection
+// PostgreSQL Connection (Ready for Supabase)
 const pool = new Pool({
-  user: 'postgres',          
-  host: 'localhost',
-  database: 'hackathon',    
-  password: '1234', 
-  port: 5432,
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false // Required for Supabase
+  }
 });
 
 // Test DB Connection
@@ -254,9 +271,11 @@ app.post('/api/request-connection', async (req, res) => {
     const jData = junior.rows[0];
     const sData = senior.rows[0];
 
-    const acceptLink = `http://localhost:5000/api/connection-action?id=${connectionId}&status=accepted`;
-    const declineLink = `http://localhost:5000/api/connection-action?id=${connectionId}&status=declined`;
+    // Use a dynamic backend URL (Fallback to localhost for local testing)
+    const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
 
+    const acceptLink = `${BACKEND_URL}/api/connection-action?id=${connectionId}&status=accepted`;
+    const declineLink = `${BACKEND_URL}/api/connection-action?id=${connectionId}&status=declined`;
     // 3. Send Email
     const mailOptions = {
       from: process.env.EMAIL_USER,
