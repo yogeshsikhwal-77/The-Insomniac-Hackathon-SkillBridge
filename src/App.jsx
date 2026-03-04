@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import Profile from './components/Profile'; 
-import Chat from './components/Chat';// <-- Add this import
+import Chat from './components/Chat';
 
 function App() {
   return (
@@ -18,7 +18,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<Profile />} /> {/* <-- Add this route */}
+          <Route path="/profile" element={<Profile />} /> 
           <Route path="*" element={<Navigate to="/" />} />
           <Route path="/chat/:targetUserId" element={<Chat />} />
         </Routes>
